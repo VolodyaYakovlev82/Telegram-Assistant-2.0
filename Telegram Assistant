@@ -1,0 +1,157 @@
+import telebot, wikipedia, re
+
+import subprocess
+
+import datetime
+
+from datetime import datetime
+
+from pyowm import OWM
+
+from telebot import types
+
+bot_token = "5666629244:AAFb3q6mWoudKWe0JxJQmxPwe7CT4C0MgqE"
+
+
+bot = telebot.TeleBot(bot_token)
+
+@bot.message_handler(commands=["start"])
+def Start(message):
+ if message.text == "/start":
+   markup = types.InlineKeyboardMarkup()
+
+   button111 = types.InlineKeyboardButton("Как пользоваться Ассистентом?", callback_data="Кнопка111")
+   button112 = types.InlineKeyboardButton("Начать работу", callback_data="Кнопка112")
+   button113 = types.InlineKeyboardButton("Что нового?", callback_data="Кнопка113")
+   button114 = types.InlineKeyboardButton("Premium-подписка", callback_data="Кнопка114")
+   button115 = types.InlineKeyboardButton("Поддержать разработчика", callback_data="Кнопка115")
+   button116 = types.InlineKeyboardButton("Связь с разработчиком", callback_data="Кнопка116", url="https://t.me/VolodyaYakovlev82")
+
+   markup.add(button111, button112, button113, button114, button115, button116)
+
+   file_photo = open('photo_5206556225083392265_y.jpg', 'br')
+   bot.send_photo(chat_id=message.from_user.id, photo=file_photo, caption="""Приветствую, дорогой друг!😄
+Меня зовут Телеграмм Ассистент, и я твой персональный помощник! Я помогу вам узнать погоду на сегодня, время или актуальный курс любой криптовалюты. Если вам нужна моя помощь, просто напишите /help.😉""", reply_markup=markup)
+
+   @bot.callback_query_handler(func=lambda call: True)
+   def Call(call):
+    if call.data == "Кнопка112":
+
+      markup = types.InlineKeyboardMarkup()
+
+      button1 = types.InlineKeyboardButton("😁Кнопка для поднятия настроения😁", callback_data="Кнопка1")
+      button2 = types.InlineKeyboardButton("⌚️Который час?⌚️", callback_data="Кнопка2")
+      button3 = types.InlineKeyboardButton("🌤Погода сегодня🌤", callback_data="Кнопка3")
+      button4 = types.InlineKeyboardButton("🤔Подскажи, что за слово?🤔", callback_data="Кнопка4")
+      button5 = types.InlineKeyboardButton("💸Криптовалюта сегодня💸", callback_data="Кнопка5", url='https://t.me/Grogu_Weather_Bot')
+      button6 = types.InlineKeyboardButton("😏Ещё...😏", callback_data="Кнопка6")
+
+      markup.add(button1, button2, button3, button4, button5, button6)
+
+      bot.send_message(call.message.chat.id, "Здесь собран список того, чем я могу быть вам полезен. Для активации нажмите на кнопку с названием необходимой вам функции.🤖", reply_markup=markup)
+
+    @bot.message_handler(commands=['date'])
+    @bot.callback_query_handler(func=lambda call: True)
+
+    def Call(call):
+      if call.data == "Кнопка2":
+        bot.send_message(call.from_user.id, f"⏰️Время: {datetime.now(tz=None)}")
+    if call.data == "Кнопка2":
+      bot.send_message(call.from_user.id, f"⏰️Время: {datetime.now(tz=None)}")
+    if call.data == "Кнопка1":
+      file_photo = open('2014_12_06_ac131f3673b6102b5bba6cf885a50e68.jpg', 'br')
+      bot.send_photo(chat_id=call.from_user.id, photo=file_photo)
+    if call.data == "Кнопка3":
+      msg = bot.send_message(call.message.chat.id, "🌏Введите название города")
+      bot.register_next_step_handler(msg, get_weather)
+    if call.data == "Кнопка6":
+
+      markup = types.InlineKeyboardMarkup(row_width=3)
+
+      button7 = types.InlineKeyboardButton("🧮Калькулятор🧮", callback_data="Кнопка7", url='https://t.me/Grogu_Beta_Bot')
+      button8 = types.InlineKeyboardButton("📰Последние новости📰", callback_data="Кнопка8")
+      button9 = types.InlineKeyboardButton("⏳️Установка таймера⏳️", callback_data="Кнопка9")
+
+      markup.add(button7, button8, button9)
+
+      file_photo = open('photo_5206556225083392265_yор.jpg', 'br')
+      bot.send_photo(chat_id=call.from_user.id, photo=file_photo, caption="Данные функции Ассистента находятся в разработке. Нажмите на любую из них, чтобы узнать больше информации.🛠", reply_markup=markup)
+
+      @bot.message_handler(commands=['date'])
+      @bot.callback_query_handler(func=lambda call: True)
+      def Call(call):
+        if call.data == 'Кнопка7':
+          bot.send_message(call.message.chat.id, 'Калькулятор')
+    if call.data == 'Кнопка8':
+      bot.send_message(call.message.chat.id, 'На данный момент функция "Последние новости" находится в разработке. Дата выхода: неизвестно.🤷‍♂️')
+    if call.data == 'Кнопка9':
+      bot.send_message(call.message.chat.id, 'На данный момент функция "Установка таймера" находится в разработке. Дата выхода: сентябрь 2022 года.🙂')
+    if call.data == "Кнопка5":
+      bot.send_message(call.message.chat.id, '💵Криптовалюта сегодня💵')
+    if call.data == "Кнопка4":
+      bot.send_message(call.message.chat.id, '🔎Отправьте мне любое слово, и я найду его значение на Wikipedia')
+@bot.message_handler(content_types=["text"])
+def handle_text(message):
+    bot.send_message(message.chat.id, getwiki(message.text))
+
+
+def get_weather(message):
+    city = message.text
+    try:
+        w = weather(city)
+        bot.send_message(message.from_user.id, f'''🏙В городе {city} сейчас {round(w[0]["temp"])}°C.
+🌡Чувствуется как {round(w[0]["feels_like"])}°C.
+🥵Максимальная температура составляет {round(w[0]["temp_max"])}°C.
+🥶Минимальная температура составляет {round(w[0]["temp_min"])}°C.''')
+        bot.send_message(message.from_user.id, w[1])
+        bot.send_message(message.from_user.id, "🗺Хотите поискать погоду в другом городе?")
+        bot.register_next_step_handler(message, get_weather)
+    except Exception:
+        bot.send_message(message.from_user.id,'😢Упс... Такого города нет в базе, попробуй ещё раз')
+
+
+def get_location(lat, lon):
+  url = f"https://yandex.ru/pogoda/maps/nowcast?lat={lat}&lon={lon}&via=mmapwb&le_Lightning=1"
+  return url
+
+def weather(city: str):
+    owm = OWM('b06f341c1e172798c4819a98f859c30b')
+    mgr = owm.weather_manager()
+    observation = mgr.weather_at_place(city)
+    weather = observation.weather
+    location = get_location(observation.location.lat, observation.location.lon)
+    temperature = weather.temperature("celsius")
+    return temperature, location
+
+wikipedia.set_lang("ru")
+
+def getwiki(s):
+    try:
+        ny = wikipedia.page(s)
+
+        wikitext=ny.content[:1000]
+
+        wikimas=wikitext.split('.')
+
+        wikimas = wikimas[:-1]
+
+        wikitext2 = ''
+
+        for x in wikimas:
+            if not('==' in x):
+
+                if(len((x.strip()))>3):
+                   wikitext2=wikitext2+x+'.'
+            else:
+                break
+
+        wikitext2=re.sub('\([^()]*\)', '', wikitext2)
+        wikitext2=re.sub('\([^()]*\)', '', wikitext2)
+        wikitext2=re.sub('\{[^\{\}]*\}', '', wikitext2)
+
+        return wikitext2
+
+    except Exception as e:
+      return '😢В энциклопедии нет информации об этом'
+
+bot.polling(none_stop=True, interval=0)
